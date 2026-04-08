@@ -33,7 +33,7 @@ yarn-error.*
 # local env files
 .env*.local
 
-# Firebase config (contains project keys)
+# Firebase config (contains project keys — do not commit, add manually)
 google-services.json
 GoogleService-Info.plist
 

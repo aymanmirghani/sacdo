@@ -13,7 +13,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sacdo.app",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "plugins": [
       "@react-native-firebase/app"
