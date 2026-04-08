@@ -1,0 +1,139 @@
+SACDO APP - DEPLOYMENT INSTRUCTIONS
+=====================================
+
+
+PREREQUISITES
+-------------
+- Node.js installed
+- EAS CLI installed: npm install -g eas-cli
+- EAS account: https://expo.dev (username: aymanmirghani)
+- Firebase CLI installed: npm install -g firebase-tools
+- Google Play Developer account (for Android Store)
+- Apple Developer account ($99/year, for iOS App Store)
+
+
+ENVIRONMENT SETUP
+-----------------
+Before building, ensure the following files exist locally (not committed to git):
+
+  sacdo-app/google-services.json       (Android Firebase config)
+  sacdo-app/GoogleService-Info.plist   (iOS Firebase config)
+
+Download both from Firebase Console:
+  https://console.firebase.google.com
+  Project: sacdo-app-prod
+  Project Settings > Your apps > select app > Download config file
+
+Firebase secrets must be set in Firebase Secret Manager:
+  firebase functions:secrets:set SENDGRID_API_KEY
+  firebase functions:secrets:set FROM_EMAIL
+  firebase functions:secrets:set TWILIO_ACCOUNT_SID
+  firebase functions:secrets:set TWILIO_AUTH_TOKEN
+  firebase functions:secrets:set TWILIO_PHONE_NUMBER
+
+
+DEPLOYING FIREBASE FUNCTIONS
+-----------------------------
+  cd functions
+  npm run build
+  cd ..
+  firebase deploy --only functions
+
+To deploy Firestore rules only:
+  firebase deploy --only firestore:rules
+
+
+BUILDING THE APP (EAS Build)
+-----------------------------
+Login to EAS:
+  eas login
+
+Navigate to the app directory:
+  cd sacdo-app
+
+Build profiles:
+  - development : includes dev client, internal distribution (for testing)
+  - preview     : APK for direct device install (Android) / internal (iOS)
+  - production  : AAB/IPA for store submission
+
+
+--- ANDROID ---
+
+Build for testing (APK, install directly on device):
+  eas build --platform android --profile preview
+
+Build for Google Play Store (AAB):
+  eas build --platform android --profile production
+
+Download the .aab file from the link provided after the build completes.
+
+
+--- iOS ---
+
+Build for testing (internal distribution):
+  eas build --platform ios --profile preview
+
+Build for App Store:
+  eas build --platform ios --profile production
+
+Note: First iOS build will prompt for Apple Developer credentials.
+EAS will automatically manage signing certificates and provisioning profiles.
+
+
+SUBMITTING TO GOOGLE PLAY STORE
+---------------------------------
+1. Go to https://play.google.com/console and create your app if not done yet.
+2. Set up your store listing (description, screenshots, etc.).
+3. Go to Production > Releases > Create new release.
+4. Upload the .aab file downloaded from EAS Build.
+5. Fill in release notes and submit for review.
+
+Alternatively, use EAS Submit:
+  eas submit --platform android --profile production
+
+(Requires a Google Play API key configured in eas.json)
+
+
+SUBMITTING TO APPLE APP STORE
+-------------------------------
+1. Go to https://appstoreconnect.apple.com and create your app if not done yet.
+2. Set up your app listing (description, screenshots, etc.).
+3. Go to your app > TestFlight or App Store tab.
+4. EAS Submit can upload directly:
+  eas submit --platform ios --profile production
+
+(Requires Apple ID and app-specific password or API key)
+
+Manual upload alternative:
+  - Download the .ipa from EAS Build
+  - Use Transporter app (Mac) to upload to App Store Connect
+
+
+BUILDING BOTH PLATFORMS AT ONCE
+---------------------------------
+  eas build --platform all --profile production
+
+
+GITHUB REPOSITORY
+------------------
+  URL      : https://github.com/aymanmirghani/sacdo
+  Branch   : master
+
+Push latest changes:
+  git add .
+  git commit -m "your message"
+  git push
+
+
+FIREBASE PROJECT
+-----------------
+  Project ID : sacdo-app-prod
+  Console    : https://console.firebase.google.com/project/sacdo-app-prod
+  Functions  : https://console.firebase.google.com/project/sacdo-app-prod/functions
+  Firestore  : https://console.firebase.google.com/project/sacdo-app-prod/firestore
+
+
+EAS PROJECT
+------------
+  Dashboard : https://expo.dev/accounts/aymanmirghani/projects/sacdo-app
+  Project ID: b7259ab1-b64f-4bf7-9624-7ec21f80f30a
