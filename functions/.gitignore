@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+lib/
+
+# Environment & secrets
+.env
+.env.local
+.secret.*

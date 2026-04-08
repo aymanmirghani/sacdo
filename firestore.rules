@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrator' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    function isActiveMember() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+
+    // Users: members read their own doc; admins read all
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Registration requests: anyone can create (unauthenticated); admins can read/update
+    match /registrationRequests/{requestId} {
+      allow create: if true;
+      allow read, update: if isAdmin();
+    }
+
+    // Membership fees: all active members can read; only admins write
+    match /membershipFees/{feeId} {
+      allow read: if isActiveMember();
+      allow write: if isAdmin();
+    }
+
+    // Payments: members read their own; admins read/write all
+    match /payments/{paymentId} {
+      allow read: if isAdmin() ||
+        (isActiveMember() && resource.data.memberId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // Payment types: all active members can read; only admins write
+    match /paymentTypes/{typeId} {
+      allow read: if isActiveMember();
+      allow write: if isAdmin();
+    }
+
+    // Events: all active members can read; only admins write
+    match /events/{eventId} {
+      allow read: if isActiveMember();
+      allow write: if isAdmin();
+    }
+
+    // OTP tokens: managed only by Cloud Functions (service account)
+    match /otpTokens/{email} {
+      allow read, write: if false;
+    }
+  }
+}

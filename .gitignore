@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Environment & secrets
+.env
+.env.local
+.env*.local
+
+# Word doc temp files
+~$*
+
+# Claude Code local settings
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
