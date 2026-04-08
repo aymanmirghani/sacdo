@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "428518957351",
+    "project_id": "sacdo-app-prod",
+    "storage_bucket": "sacdo-app-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428518957351:android:cc60d639c591a383fa0902",
+        "android_client_info": {
+          "package_name": "com.sacdo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-BwP17mPG0tt9z9wqhUQgU1fcMKAyBss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
