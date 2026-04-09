@@ -1,6 +1,7 @@
 export type UserRole = 'Member' | 'Administrator';
 export type UserStatus = 'active' | 'inactive';
 export type RegistrationStatus = 'pending' | 'approved' | 'rejected';
+export type InvoiceStatus = 'pending' | 'paid' | 'overdue';
 
 export interface User {
   id: string;
@@ -61,6 +62,32 @@ export interface Event {
   createdBy: string;
 }
 
+export interface Invoice {
+  id: string;
+  memberId: string;
+  memberName: string;
+  baseAmount: number;
+  pastDueAmount: number;
+  amount: number;            // baseAmount + pastDueAmount
+  period: string;            // 'YYYY-MM'
+  invoiceDate: Date;
+  dueDate: Date;
+  status: InvoiceStatus;
+  paidDate?: Date;
+  paymentMethod?: string;
+  paymentReference?: string;
+  notes?: string;
+  autoPayEnabled?: boolean;
+}
+
+export interface InvoiceConfig {
+  generationDay: number;   // 1–28
+  dueDay: number;          // 1–28
+  membershipType: string;
+  updatedAt: Date;
+  updatedBy: string;
+}
+
 // Navigation param lists
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -73,6 +100,7 @@ export type MemberTabParamList = {
   Home: undefined;
   Events: undefined;
   MembershipFees: undefined;
+  Invoices: undefined;
   Profile: undefined;
 };
 
@@ -87,8 +115,10 @@ export type AdminTabParamList = {
 export type AdminStackParamList = {
   AdminTabs: undefined;
   MemberPayments: { memberId: string; memberName: string };
+  MemberInvoices: { memberId: string; memberName: string };
   FeeConfig: undefined;
   PaymentTypes: undefined;
+  InvoiceConfig: undefined;
 };
 
 export type RootStackParamList = {

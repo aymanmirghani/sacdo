@@ -27,4 +27,6 @@ export const Collections = {
   PAYMENTS: 'payments',
   EVENTS: 'events',
   OTP_TOKENS: 'otpTokens',
+  INVOICES: 'invoices',
+  INVOICE_CONFIG: 'invoiceConfig',
 } as const;

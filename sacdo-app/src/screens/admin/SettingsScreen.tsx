@@ -28,6 +28,14 @@ export default function SettingsScreen() {
         onPress={() => navigation.navigate('PaymentTypes')}
       />
       <Divider />
+      <List.Item
+        title="Invoice Configuration"
+        description="Set invoice schedule, due dates, and generate invoices on demand"
+        left={(props) => <List.Icon {...props} icon="calendar-clock" />}
+        right={(props) => <List.Icon {...props} icon="chevron-right" />}
+        onPress={() => navigation.navigate('InvoiceConfig')}
+      />
+      <Divider />
     </View>
   );
 }

@@ -54,5 +54,22 @@ service cloud.firestore {
     match /otpTokens/{email} {
       allow read, write: if false;
     }
+
+    // Invoices: members read their own; admins read/write all
+    // Members may also update only the autoPayEnabled field on their own invoices
+    match /invoices/{invoiceId} {
+      allow read: if isAdmin() ||
+        (isActiveMember() && resource.data.memberId == request.auth.uid);
+      allow write: if isAdmin();
+      allow update: if isActiveMember()
+        && resource.data.memberId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autoPayEnabled']);
+    }
+
+    // Invoice config: all active members can read; only admins write
+    match /invoiceConfig/{configId} {
+      allow read: if isActiveMember();
+      allow write: if isAdmin();
+    }
   }
 }

@@ -114,6 +114,17 @@ export default function MembersListScreen() {
               </Button>
               <Button
                 mode="outlined"
+                onPress={() =>
+                  navigation.navigate('MemberInvoices', {
+                    memberId: item.id,
+                    memberName: `${item.firstName} ${item.lastName}`,
+                  })
+                }
+              >
+                Invoices
+              </Button>
+              <Button
+                mode="outlined"
                 loading={actionLoading === item.id}
                 disabled={!!actionLoading}
                 onPress={() => toggleStatus(item)}
