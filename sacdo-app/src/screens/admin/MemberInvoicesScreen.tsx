@@ -25,11 +25,25 @@ const STATUS_COLORS: Record<string, string> = {
   overdue: '#FFCDD2',
 };
 
+function getPeriodOptions(): string[] {
+  const options: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    options.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return options;
+}
+
+const PERIOD_OPTIONS = getPeriodOptions();
+
 export default function MemberInvoicesScreen({ route }: Props) {
   const { memberId, memberName } = route.params;
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentTypes, setPaymentTypes] = useState<string[]>([]);
+
+  // Mark as paid dialog
   const [selected, setSelected] = useState<Invoice | null>(null);
   const [dialogVisible, setDialogVisible] = useState(false);
   const [payMethod, setPayMethod] = useState('');
@@ -37,6 +51,11 @@ export default function MemberInvoicesScreen({ route }: Props) {
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Generate invoice dialog
+  const [generateDialogVisible, setGenerateDialogVisible] = useState(false);
+  const [generatePeriod, setGeneratePeriod] = useState(PERIOD_OPTIONS[0]);
+  const [generatePeriodMenuVisible, setGeneratePeriodMenuVisible] = useState(false);
   const [generating, setGenerating] = useState(false);
 
   const load = useCallback(async () => {
@@ -87,32 +106,21 @@ export default function MemberInvoicesScreen({ route }: Props) {
   }
 
   async function handleGenerate() {
-    Alert.alert(
-      'Generate Invoice',
-      `Generate an invoice for ${memberName} for the current period?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Generate',
-          onPress: async () => {
-            setGenerating(true);
-            try {
-              const result = await generateInvoicesOnDemand(memberId);
-              if (result.created === 0) {
-                Alert.alert('Info', 'An invoice for this period already exists for this member.');
-              } else {
-                Alert.alert('Success', 'Invoice generated successfully.');
-                load();
-              }
-            } catch {
-              Alert.alert('Error', 'Failed to generate invoice. Make sure invoice configuration is set up.');
-            } finally {
-              setGenerating(false);
-            }
-          },
-        },
-      ]
-    );
+    setGenerating(true);
+    try {
+      const result = await generateInvoicesOnDemand(memberId, generatePeriod);
+      setGenerateDialogVisible(false);
+      if (result.created === 0) {
+        Alert.alert('Info', `An invoice for ${generatePeriod} already exists for this member.`);
+      } else {
+        Alert.alert('Success', `Invoice for ${generatePeriod} generated successfully.`);
+        load();
+      }
+    } catch {
+      Alert.alert('Error', 'Failed to generate invoice. Make sure invoice configuration is set up.');
+    } finally {
+      setGenerating(false);
+    }
   }
 
   if (loading) return <ActivityIndicator style={styles.center} />;
@@ -190,10 +198,50 @@ export default function MemberInvoicesScreen({ route }: Props) {
         loading={generating}
         disabled={generating}
         style={styles.fab}
-        onPress={handleGenerate}
+        onPress={() => setGenerateDialogVisible(true)}
       />
 
       <Portal>
+        {/* Generate invoice dialog */}
+        <Dialog visible={generateDialogVisible} onDismiss={() => setGenerateDialogVisible(false)}>
+          <Dialog.Title>Generate Invoice</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={styles.dialogSubtitle}>
+              Select the period to generate an invoice for {memberName}.
+            </Text>
+            <Text variant="labelMedium" style={styles.fieldLabel}>Period</Text>
+            <Menu
+              visible={generatePeriodMenuVisible}
+              onDismiss={() => setGeneratePeriodMenuVisible(false)}
+              anchor={
+                <Button
+                  mode="outlined"
+                  onPress={() => setGeneratePeriodMenuVisible(true)}
+                  style={styles.menuBtn}
+                  contentStyle={styles.menuBtnContent}
+                >
+                  {generatePeriod}
+                </Button>
+              }
+            >
+              {PERIOD_OPTIONS.map((p) => (
+                <Menu.Item
+                  key={p}
+                  title={p}
+                  onPress={() => { setGeneratePeriodMenuVisible(false); setGeneratePeriod(p); }}
+                />
+              ))}
+            </Menu>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setGenerateDialogVisible(false)}>Cancel</Button>
+            <Button onPress={handleGenerate} loading={generating} disabled={generating}>
+              Generate
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        {/* Mark as paid dialog */}
         <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
           <Dialog.Title>Mark Invoice as Paid</Dialog.Title>
           <Dialog.ScrollArea style={styles.dialogScroll}>
@@ -267,6 +315,7 @@ const styles = StyleSheet.create({
   meta: { color: '#555', marginTop: 2 },
   empty: { textAlign: 'center', marginTop: 48, color: '#888' },
   fab: { position: 'absolute', bottom: 16, right: 16 },
+  dialogSubtitle: { marginBottom: 16, color: '#555' },
   dialogScroll: { maxHeight: 380 },
   dialogAmount: { marginBottom: 12, fontWeight: 'bold' },
   fieldLabel: { color: '#555', marginBottom: 4 },

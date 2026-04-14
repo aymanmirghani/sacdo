@@ -2,14 +2,13 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useAuthStore } from '../../store/useAuthStore';
-import { signOut } from '../../services/auth';
+import { lockApp } from '../../services/auth';
 
 export default function AdminDashboardScreen() {
-  const { user, clear } = useAuthStore();
+  const { user, setUser, setBiometricLocked, clear } = useAuthStore();
 
   async function handleSignOut() {
-    await signOut();
-    clear();
+    await lockApp({ setUser, setBiometricLocked, clear });
   }
 
   return (

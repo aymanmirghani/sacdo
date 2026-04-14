@@ -33,7 +33,7 @@ export const onNewRegistrationRequest = onDocumentCreated(
     });
 
     if (tokens.length > 0) {
-      await admin.messaging().sendEachForMulticast({
+      await admin.messaging().sendMulticast({
         tokens,
         notification: {
           title: 'New Membership Request',

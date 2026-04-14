@@ -93,8 +93,20 @@ export async function updateAutoPayPreference(invoiceId: string, enabled: boolea
     .update({ autoPayEnabled: enabled });
 }
 
-export async function generateInvoicesOnDemand(memberId?: string): Promise<{ created: number }> {
+export async function generateInvoicesOnDemand(memberId?: string, period?: string): Promise<{ created: number }> {
   const fn = functions().httpsCallable('generateInvoicesOnDemand');
-  const result = await fn({ memberId: memberId ?? null });
+  const result = await fn({ memberId: memberId ?? null, period: period ?? null });
   return result.data as { created: number };
+}
+
+export async function createPaymentIntent(invoiceId: string): Promise<{ clientSecret: string }> {
+  const fn = functions().httpsCallable('createPaymentIntent');
+  const result = await fn({ invoiceId });
+  return result.data as { clientSecret: string };
+}
+
+export async function createSetupIntent(): Promise<{ setupIntentClientSecret: string }> {
+  const fn = functions().httpsCallable('createSetupIntent');
+  const result = await fn({});
+  return result.data as { setupIntentClientSecret: string };
 }

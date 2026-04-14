@@ -12,6 +12,8 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   createdAt: Date;
+  stripeCustomerId?: string;
+  stripePaymentMethodId?: string;
 }
 
 export interface RegistrationRequest {
@@ -78,6 +80,7 @@ export interface Invoice {
   paymentReference?: string;
   notes?: string;
   autoPayEnabled?: boolean;
+  stripePaymentIntentId?: string;
 }
 
 export interface InvoiceConfig {

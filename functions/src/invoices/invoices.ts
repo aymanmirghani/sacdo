@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
+import { processAutoPayInvoices } from '../payments/stripe';
 
 const db = admin.firestore();
 
@@ -47,7 +48,10 @@ async function buildAndCreateInvoices(
       .limit(1)
       .get();
 
-    if (!existing.empty) continue;
+    if (!existing.empty) {
+      console.log(`Invoice for ${period} already exists for member ${memberId} (doc: ${existing.docs[0].id})`);
+      continue;
+    }
 
     // Calculate past due: sum of all unpaid prior invoices
     const unpaidSnap = await db
@@ -99,11 +103,16 @@ async function buildAndCreateInvoices(
     }).catch(() => {}); // ignore stale tokens
   }
 
+  // Charge any pending/overdue invoices that have auto-pay enabled
+  await processAutoPayInvoices();
+
   return created;
 }
 
 // Scheduled: runs daily, generates invoices on the configured day
-export const generateMonthlyInvoices = onSchedule('every day 08:00', async () => {
+export const generateMonthlyInvoices = onSchedule(
+  { schedule: 'every day 08:00', secrets: ['STRIPE_SECRET_KEY'] },
+  async () => {
   const configDoc = await db.collection('invoiceConfig').doc('default').get();
   if (!configDoc.exists) {
     console.log('No invoice config found, skipping generation.');
@@ -126,10 +135,11 @@ export const generateMonthlyInvoices = onSchedule('every day 08:00', async () =>
 
   const created = await buildAndCreateInvoices(membersSnap.docs as admin.firestore.DocumentSnapshot[], config, now);
   console.log(`Monthly invoice generation complete. Created: ${created}`);
-});
+  }
+);
 
 // On-demand: admin triggers generation for one or all members
-export const generateInvoicesOnDemand = onCall(async (request) => {
+export const generateInvoicesOnDemand = onCall({ secrets: ['STRIPE_SECRET_KEY'] }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
 
   const callerDoc = await db.collection('users').doc(request.auth.uid).get();
@@ -141,7 +151,19 @@ export const generateInvoicesOnDemand = onCall(async (request) => {
   if (!configDoc.exists) throw new HttpsError('failed-precondition', 'Invoice configuration not set up.');
 
   const config = configDoc.data() as InvoiceConfig;
-  const { memberId } = request.data as { memberId?: string | null };
+  const { memberId, period } = request.data as { memberId?: string | null; period?: string | null };
+
+  let invoiceDate: Date;
+  if (period) {
+    const match = period.match(/^(\d{4})-(\d{2})$/);
+    if (!match) throw new HttpsError('invalid-argument', 'period must be in YYYY-MM format.');
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    if (month < 1 || month > 12) throw new HttpsError('invalid-argument', 'Invalid month in period.');
+    invoiceDate = new Date(year, month - 1, 1);
+  } else {
+    invoiceDate = new Date();
+  }
 
   let memberDocs: admin.firestore.DocumentSnapshot[];
   if (memberId) {
@@ -157,6 +179,6 @@ export const generateInvoicesOnDemand = onCall(async (request) => {
     memberDocs = snap.docs;
   }
 
-  const created = await buildAndCreateInvoices(memberDocs, config, new Date());
+  const created = await buildAndCreateInvoices(memberDocs, config, invoiceDate);
   return { created };
 });

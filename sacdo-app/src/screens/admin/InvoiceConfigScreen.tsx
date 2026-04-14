@@ -5,6 +5,18 @@ import { getMembershipFees } from '../../services/members';
 import { getInvoiceConfig, saveInvoiceConfig, generateInvoicesOnDemand } from '../../services/invoices';
 import { useAuthStore } from '../../store/useAuthStore';
 
+function getPeriodOptions(): string[] {
+  const options: string[] = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    options.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return options;
+}
+
+const PERIOD_OPTIONS = getPeriodOptions();
+
 export default function InvoiceConfigScreen() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
@@ -12,6 +24,8 @@ export default function InvoiceConfigScreen() {
   const [generating, setGenerating] = useState(false);
   const [feeTypes, setFeeTypes] = useState<string[]>([]);
   const [feeTypeMenuVisible, setFeeTypeMenuVisible] = useState(false);
+  const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPTIONS[0]);
   const [form, setForm] = useState({
     generationDay: '1',
     dueDay: '15',
@@ -76,7 +90,7 @@ export default function InvoiceConfigScreen() {
   async function handleGenerateAll() {
     Alert.alert(
       'Generate Invoices for All Members',
-      'This will generate invoices for the current period for all active members who do not already have one. Continue?',
+      `Generate invoices for ${selectedPeriod} for all active members who do not already have one. Continue?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -84,7 +98,7 @@ export default function InvoiceConfigScreen() {
           onPress: async () => {
             setGenerating(true);
             try {
-              const result = await generateInvoicesOnDemand();
+              const result = await generateInvoicesOnDemand(undefined, selectedPeriod);
               Alert.alert('Done', `${result.created} invoice(s) generated.`);
             } catch {
               Alert.alert('Error', 'Failed to generate invoices. Make sure the configuration is saved first.');
@@ -169,8 +183,32 @@ export default function InvoiceConfigScreen() {
 
       <Text variant="titleMedium" style={styles.section}>Generate Invoices Now</Text>
       <Text variant="bodySmall" style={styles.hint}>
-        Generate invoices for the current period for all active members. Members who already have an invoice this period will be skipped.
+        Generate invoices for all active members. Members who already have an invoice for the selected period will be skipped.
       </Text>
+
+      <Text variant="labelMedium" style={styles.fieldLabel}>Period</Text>
+      <Menu
+        visible={periodMenuVisible}
+        onDismiss={() => setPeriodMenuVisible(false)}
+        anchor={
+          <Button
+            mode="outlined"
+            onPress={() => setPeriodMenuVisible(true)}
+            style={styles.menuBtn}
+            contentStyle={styles.menuBtnContent}
+          >
+            {selectedPeriod}
+          </Button>
+        }
+      >
+        {PERIOD_OPTIONS.map((p) => (
+          <Menu.Item
+            key={p}
+            title={p}
+            onPress={() => { setPeriodMenuVisible(false); setSelectedPeriod(p); }}
+          />
+        ))}
+      </Menu>
 
       <Button
         mode="outlined"

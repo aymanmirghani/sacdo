@@ -1,6 +1,8 @@
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { Collections } from './firebase';
 import { User } from '../types';
 
@@ -56,6 +58,8 @@ export async function loadCurrentUser(): Promise<User | null> {
     role: data.role,
     status: data.status,
     createdAt: data.createdAt?.toDate(),
+    stripeCustomerId: data.stripeCustomerId,
+    stripePaymentMethodId: data.stripePaymentMethodId,
   };
 }
 
@@ -65,4 +69,26 @@ export async function saveFCMToken(userId: string, token: string) {
 
 export async function signOut() {
   await auth().signOut();
+}
+
+// Called when user taps "Sign Out" from within the app.
+// If biometric is enabled, locks the app without ending the Firebase session
+// so the user can unlock with biometrics. Falls back to full sign out otherwise.
+export async function lockApp(actions: {
+  setUser: (user: User | null) => void;
+  setBiometricLocked: (locked: boolean) => void;
+  clear: () => void;
+}): Promise<void> {
+  const biometricEnabled = await AsyncStorage.getItem('biometricEnabled');
+  if (biometricEnabled === 'true') {
+    const supported = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+    if (supported && enrolled) {
+      actions.setUser(null);
+      actions.setBiometricLocked(true);
+      return;
+    }
+  }
+  await auth().signOut();
+  actions.clear();
 }
