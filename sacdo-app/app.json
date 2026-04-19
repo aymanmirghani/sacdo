@@ -24,7 +24,8 @@
     "plugins": [
       "@react-native-firebase/app",
       ["@stripe/stripe-react-native", {
-        "merchantIdentifier": "merchant.com.sacdo.app"
+        "merchantIdentifier": "merchant.com.sacdo.app",
+        "publishableKey": "pk_live_51TK8Jo01tmZbQrzJLrrrGtFnxC51or7dWGTVRbW7m5pvpwUidIPk2UjboavxP5wcg3F0CI2STZadsUfLF1RU6DTd00NzaszOFs"
       }]
     ],
     "android": {
