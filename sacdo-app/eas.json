@@ -9,10 +9,16 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_live_51TK8Jo01tmZbQrzJLrrrGtFnxC51or7dWGTVRbW7m5pvpwUidIPk2UjboavxP5wcg3F0CI2STZadsUfLF1RU6DTd00NzaszOFs"
+      }
     }
   },
   "submit": {

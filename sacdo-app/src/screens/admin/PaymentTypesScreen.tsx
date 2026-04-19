@@ -3,8 +3,10 @@ import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { Text, Card, Button, ActivityIndicator, TextInput, Portal, Dialog, FAB } from 'react-native-paper';
 import { PaymentType } from '../../types';
 import { getPaymentTypes, upsertPaymentType, deletePaymentType } from '../../services/members';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function PaymentTypesScreen() {
+  const { user } = useAuthStore();
   const [types, setTypes] = useState<PaymentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogVisible, setDialogVisible] = useState(false);
@@ -44,7 +46,10 @@ export default function PaymentTypesScreen() {
     }
     setSaving(true);
     try {
-      await upsertPaymentType({ id: editingType?.id, name: name.trim() });
+      await upsertPaymentType(
+        { id: editingType?.id, name: name.trim() },
+        { id: user!.id, name: `${user!.firstName} ${user!.lastName}` }
+      );
       setDialogVisible(false);
       load();
     } catch {
@@ -65,7 +70,7 @@ export default function PaymentTypesScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deletePaymentType(pt.id);
+              await deletePaymentType(pt.id, { id: user!.id, name: `${user!.firstName} ${user!.lastName}` });
               setTypes((prev) => prev.filter((t) => t.id !== pt.id));
             } catch {
               Alert.alert('Error', 'Failed to delete payment type.');

@@ -15,9 +15,14 @@ export default function RegistrationRequestsScreen() {
 
   async function load() {
     setLoading(true);
-    const data = await getPendingRequests();
-    setRequests(data);
-    setLoading(false);
+    try {
+      const data = await getPendingRequests();
+      setRequests(data);
+    } catch {
+      Alert.alert('Error', 'Failed to load requests.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);

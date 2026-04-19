@@ -2,6 +2,7 @@ import firestore from '@react-native-firebase/firestore';
 import functions from '@react-native-firebase/functions';
 import { Collections } from './firebase';
 import { User, RegistrationRequest, MembershipFee, PaymentType, Payment, Event } from '../types';
+import { logAuditEntry } from './audit';
 
 function toUser(doc: any): User {
   const d = doc.data();
@@ -12,6 +13,7 @@ function toUser(doc: any): User {
     phone: d.phone,
     email: d.email,
     role: d.role,
+    isAdmin: d.IsAdmin ?? false,
     status: d.status,
     createdAt: d.createdAt?.toDate(),
   };
@@ -80,6 +82,24 @@ export async function setMemberStatus(memberId: string, status: 'active' | 'inac
   await firestore().collection(Collections.USERS).doc(memberId).update({ status });
 }
 
+export async function updateMember(memberId: string, data: {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  isAdmin: boolean;
+  status: 'active' | 'inactive';
+}) {
+  await firestore().collection(Collections.USERS).doc(memberId).update({
+    firstName: data.firstName,
+    lastName: data.lastName,
+    phone: data.phone,
+    email: data.email,
+    IsAdmin: data.isAdmin,
+    status: data.status,
+  });
+}
+
 // Payments
 export async function getMemberPayments(memberId: string): Promise<Payment[]> {
   const snap = await firestore()
@@ -123,17 +143,53 @@ export async function getPaymentTypes(): Promise<PaymentType[]> {
   return snap.docs.map((doc) => ({ id: doc.id, name: doc.data().name as string }));
 }
 
-export async function upsertPaymentType(pt: { id?: string; name: string }) {
+export async function upsertPaymentType(
+  pt: { id?: string; name: string },
+  admin: { id: string; name: string }
+) {
   const { id, ...fields } = pt;
   if (id) {
+    const oldDoc = await firestore().collection(Collections.PAYMENT_TYPES).doc(id).get();
+    const oldName = oldDoc.data()?.name ?? null;
     await firestore().collection(Collections.PAYMENT_TYPES).doc(id).set(fields, { merge: true });
+    if (oldName !== fields.name) {
+      await logAuditEntry({
+        adminId: admin.id,
+        adminName: admin.name,
+        action: 'payment_type_updated',
+        collection: Collections.PAYMENT_TYPES,
+        itemId: id,
+        itemDescription: fields.name,
+        changes: [{ field: 'name', oldValue: oldName, newValue: fields.name }],
+      });
+    }
   } else {
-    await firestore().collection(Collections.PAYMENT_TYPES).add(fields);
+    const ref = await firestore().collection(Collections.PAYMENT_TYPES).add(fields);
+    await logAuditEntry({
+      adminId: admin.id,
+      adminName: admin.name,
+      action: 'payment_type_created',
+      collection: Collections.PAYMENT_TYPES,
+      itemId: ref.id,
+      itemDescription: fields.name,
+      changes: [{ field: 'name', oldValue: null, newValue: fields.name }],
+    });
   }
 }
 
-export async function deletePaymentType(id: string) {
+export async function deletePaymentType(id: string, admin: { id: string; name: string }) {
+  const oldDoc = await firestore().collection(Collections.PAYMENT_TYPES).doc(id).get();
+  const oldName = oldDoc.data()?.name ?? id;
   await firestore().collection(Collections.PAYMENT_TYPES).doc(id).delete();
+  await logAuditEntry({
+    adminId: admin.id,
+    adminName: admin.name,
+    action: 'payment_type_deleted',
+    collection: Collections.PAYMENT_TYPES,
+    itemId: id,
+    itemDescription: oldName,
+    changes: [{ field: 'name', oldValue: oldName, newValue: null }],
+  });
 }
 
 // Membership Fees
@@ -151,13 +207,46 @@ export async function getMembershipFees(): Promise<MembershipFee[]> {
   });
 }
 
-export async function upsertMembershipFee(fee: Omit<MembershipFee, 'id' | 'updatedAt'> & { id?: string }) {
+export async function upsertMembershipFee(
+  fee: Omit<MembershipFee, 'id' | 'updatedAt'> & { id?: string },
+  admin: { id: string; name: string }
+) {
   const { id, ...fields } = fee;
   const payload = { ...fields, updatedAt: firestore.FieldValue.serverTimestamp() };
   if (id) {
+    const oldDoc = await firestore().collection(Collections.MEMBERSHIP_FEES).doc(id).get();
+    const old = oldDoc.data();
     await firestore().collection(Collections.MEMBERSHIP_FEES).doc(id).set(payload, { merge: true });
+    const trackFields: Array<keyof typeof fields> = ['membershipType', 'amount', 'description'];
+    const changes = trackFields
+      .filter((f) => !old || old[f] !== fields[f])
+      .map((f) => ({ field: f, oldValue: old ? (old[f] ?? null) : null, newValue: fields[f] as string | number }));
+    if (changes.length > 0) {
+      await logAuditEntry({
+        adminId: admin.id,
+        adminName: admin.name,
+        action: 'fee_updated',
+        collection: Collections.MEMBERSHIP_FEES,
+        itemId: id,
+        itemDescription: fields.membershipType,
+        changes,
+      });
+    }
   } else {
-    await firestore().collection(Collections.MEMBERSHIP_FEES).add(payload);
+    const ref = await firestore().collection(Collections.MEMBERSHIP_FEES).add(payload);
+    await logAuditEntry({
+      adminId: admin.id,
+      adminName: admin.name,
+      action: 'fee_created',
+      collection: Collections.MEMBERSHIP_FEES,
+      itemId: ref.id,
+      itemDescription: fields.membershipType,
+      changes: [
+        { field: 'membershipType', oldValue: null, newValue: fields.membershipType },
+        { field: 'amount', oldValue: null, newValue: fields.amount },
+        { field: 'description', oldValue: null, newValue: fields.description },
+      ],
+    });
   }
 }
 

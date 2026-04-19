@@ -14,7 +14,8 @@ interface InvoiceConfig {
 async function buildAndCreateInvoices(
   members: admin.firestore.DocumentSnapshot[],
   config: InvoiceConfig,
-  now: Date
+  now: Date,
+  generatedBy: string
 ): Promise<number> {
   const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -79,6 +80,7 @@ async function buildAndCreateInvoices(
       dueDate: admin.firestore.Timestamp.fromDate(dueDate),
       status: 'pending',
       autoPayEnabled: false,
+      generatedBy,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -133,7 +135,7 @@ export const generateMonthlyInvoices = onSchedule(
     .where('status', '==', 'active')
     .get();
 
-  const created = await buildAndCreateInvoices(membersSnap.docs as admin.firestore.DocumentSnapshot[], config, now);
+  const created = await buildAndCreateInvoices(membersSnap.docs as admin.firestore.DocumentSnapshot[], config, now, 'Auto Generated');
   console.log(`Monthly invoice generation complete. Created: ${created}`);
   }
 );
@@ -143,9 +145,12 @@ export const generateInvoicesOnDemand = onCall({ secrets: ['STRIPE_SECRET_KEY'] 
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
 
   const callerDoc = await db.collection('users').doc(request.auth.uid).get();
-  if (!callerDoc.exists || callerDoc.data()?.role !== 'Administrator') {
+  if (!callerDoc.exists || !callerDoc.data()?.IsAdmin) {
     throw new HttpsError('permission-denied', 'Admins only.');
   }
+
+  const callerData = callerDoc.data()!;
+  const adminName = `${callerData.firstName} ${callerData.lastName}`;
 
   const configDoc = await db.collection('invoiceConfig').doc('default').get();
   if (!configDoc.exists) throw new HttpsError('failed-precondition', 'Invoice configuration not set up.');
@@ -179,6 +184,6 @@ export const generateInvoicesOnDemand = onCall({ secrets: ['STRIPE_SECRET_KEY'] 
     memberDocs = snap.docs;
   }
 
-  const created = await buildAndCreateInvoices(memberDocs, config, invoiceDate);
+  const created = await buildAndCreateInvoices(memberDocs, config, invoiceDate, adminName);
   return { created };
 });

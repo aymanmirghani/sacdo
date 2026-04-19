@@ -4,7 +4,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrator' &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.IsAdmin == true &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
     }
 
@@ -70,6 +70,11 @@ service cloud.firestore {
     match /invoiceConfig/{configId} {
       allow read: if isActiveMember();
       allow write: if isAdmin();
+    }
+
+    // Audit log: only admins can read or write
+    match /auditLog/{entryId} {
+      allow read, write: if isAdmin();
     }
   }
 }

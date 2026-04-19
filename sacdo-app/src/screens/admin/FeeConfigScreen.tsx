@@ -3,8 +3,10 @@ import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import { Text, Card, Button, ActivityIndicator, TextInput, Portal, Dialog, FAB } from 'react-native-paper';
 import { MembershipFee } from '../../types';
 import { getMembershipFees, upsertMembershipFee } from '../../services/members';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export default function FeeConfigScreen() {
+  const { user } = useAuthStore();
   const [fees, setFees] = useState<MembershipFee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogVisible, setDialogVisible] = useState(false);
@@ -38,12 +40,15 @@ export default function FeeConfigScreen() {
       return;
     }
     try {
-      await upsertMembershipFee({
-        id: editingFee?.id,
-        membershipType: form.membershipType.trim(),
-        amount: parseFloat(form.amount),
-        description: form.description.trim(),
-      });
+      await upsertMembershipFee(
+        {
+          id: editingFee?.id,
+          membershipType: form.membershipType.trim(),
+          amount: parseFloat(form.amount),
+          description: form.description.trim(),
+        },
+        { id: user!.id, name: `${user!.firstName} ${user!.lastName}` }
+      );
       setDialogVisible(false);
       load();
     } catch {

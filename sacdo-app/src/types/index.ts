@@ -1,4 +1,4 @@
-export type UserRole = 'Member' | 'Administrator';
+export type UserRole = 'Member';
 export type UserStatus = 'active' | 'inactive';
 export type RegistrationStatus = 'pending' | 'approved' | 'rejected';
 export type InvoiceStatus = 'pending' | 'paid' | 'overdue';
@@ -10,6 +10,7 @@ export interface User {
   phone: string;
   email: string;
   role: UserRole;
+  isAdmin: boolean;
   status: UserStatus;
   createdAt: Date;
   stripeCustomerId?: string;
@@ -81,6 +82,20 @@ export interface Invoice {
   notes?: string;
   autoPayEnabled?: boolean;
   stripePaymentIntentId?: string;
+  generatedBy?: string;
+  processedBy?: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  adminId: string;
+  adminName: string;
+  action: string;
+  collection: string;
+  itemId?: string;
+  itemDescription?: string;
+  changes: Array<{ field: string; oldValue: string | number | null; newValue: string | number | null }>;
+  timestamp: Date;
 }
 
 export interface InvoiceConfig {
@@ -115,13 +130,23 @@ export type AdminTabParamList = {
   Events: undefined;
 };
 
+export type InvoiceFilter =
+  | 'generatedThisMonth'
+  | 'generatedLastMonth'
+  | 'pending'
+  | 'overdue'
+  | 'paidThisMonth'
+  | 'paidLastMonth';
+
 export type AdminStackParamList = {
   AdminTabs: undefined;
   MemberPayments: { memberId: string; memberName: string };
   MemberInvoices: { memberId: string; memberName: string };
+  InvoiceList: { filter: InvoiceFilter; title: string };
   FeeConfig: undefined;
   PaymentTypes: undefined;
   InvoiceConfig: undefined;
+  AuditLog: undefined;
 };
 
 export type RootStackParamList = {

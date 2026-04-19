@@ -4,6 +4,7 @@ import { Button, Text, TextInput, SegmentedButtons, Divider } from 'react-native
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
+import auth from '@react-native-firebase/auth';
 import { AuthStackParamList } from '../../types';
 import { sendPhoneOTP, sendEmailOTP, loadCurrentUser } from '../../services/auth';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -26,6 +27,9 @@ export default function LoginScreen({ navigation }: Props) {
     async function checkBiometric() {
       const enabled = await AsyncStorage.getItem('biometricEnabled');
       if (enabled !== 'true') return;
+      // Only show biometric option when there is an active Firebase session
+      // to load the user from. If the user signed out, there is nothing to unlock.
+      if (!auth().currentUser) return;
       const supported = await LocalAuthentication.hasHardwareAsync();
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       if (!supported || !enrolled) return;

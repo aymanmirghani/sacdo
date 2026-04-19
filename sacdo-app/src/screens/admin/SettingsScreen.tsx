@@ -36,6 +36,14 @@ export default function SettingsScreen() {
         onPress={() => navigation.navigate('InvoiceConfig')}
       />
       <Divider />
+      <List.Item
+        title="Audit Log"
+        description="View administrator action history"
+        left={(props) => <List.Icon {...props} icon="clipboard-text-clock-outline" />}
+        right={(props) => <List.Icon {...props} icon="chevron-right" />}
+        onPress={() => navigation.navigate('AuditLog')}
+      />
+      <Divider />
     </View>
   );
 }

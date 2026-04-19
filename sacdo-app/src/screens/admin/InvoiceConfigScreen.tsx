@@ -77,7 +77,7 @@ export default function InvoiceConfigScreen() {
     try {
       await saveInvoiceConfig(
         { generationDay: genDay, dueDay: dueDay, membershipType: form.membershipType },
-        user!.id
+        { id: user!.id, name: `${user!.firstName} ${user!.lastName}` }
       );
       Alert.alert('Success', 'Invoice configuration saved.');
     } catch {

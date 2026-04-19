@@ -40,6 +40,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "extra": {
       "eas": {
         "projectId": "b7259ab1-b64f-4bf7-9624-7ec21f80f30a"

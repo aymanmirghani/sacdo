@@ -26,13 +26,17 @@ export default function AppNavigator() {
           if (firebaseUser) {
             const appUser = await loadCurrentUser();
             setUser(appUser);
-            // Check if biometric lock should be applied
-            const biometricEnabled = await AsyncStorage.getItem('biometricEnabled');
-            if (biometricEnabled === 'true') {
-              const supported = await LocalAuthentication.hasHardwareAsync();
-              const enrolled = await LocalAuthentication.isEnrolledAsync();
-              if (supported && enrolled) {
-                setBiometricLocked(true);
+            // Only lock with biometrics on initial app startup (loading === true).
+            // Subsequent auth state changes (e.g. after OTP sign-in) must NOT
+            // re-lock the app or the user would see the lock screen after every login.
+            if (useAuthStore.getState().loading) {
+              const biometricEnabled = await AsyncStorage.getItem('biometricEnabled');
+              if (biometricEnabled === 'true') {
+                const supported = await LocalAuthentication.hasHardwareAsync();
+                const enrolled = await LocalAuthentication.isEnrolledAsync();
+                if (supported && enrolled) {
+                  setBiometricLocked(true);
+                }
               }
             }
           } else {
@@ -70,7 +74,7 @@ export default function AppNavigator() {
       <Root.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <Root.Screen name="Auth" component={AuthStack} />
-        ) : user.role === 'Administrator' ? (
+        ) : user.isAdmin ? (
           <Root.Screen name="AdminApp" component={AdminStack} />
         ) : (
           <Root.Screen name="MemberApp" component={MemberTabs} />

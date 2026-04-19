@@ -29,4 +29,5 @@ export const Collections = {
   OTP_TOKENS: 'otpTokens',
   INVOICES: 'invoices',
   INVOICE_CONFIG: 'invoiceConfig',
+  AUDIT_LOG: 'auditLog',
 } as const;

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Text, Divider } from 'react-native-paper';
 import * as LocalAuthentication from 'expo-local-authentication';
+import auth from '@react-native-firebase/auth';
 import { loadCurrentUser } from '../../services/auth';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -45,10 +46,13 @@ export default function BiometricLockScreen() {
     authenticate();
   }, []);
 
-  function handleUseOTP() {
-    // Don't sign out — keep the Firebase session alive so biometric
-    // is still available on the login screen. Just release the lock.
-    setBiometricLocked(false);
+  async function handleUseOTP() {
+    // Sign out fully so there is no active session when the user attempts
+    // phone/email auth. An active session causes Firebase's app-verification
+    // (Play Integrity / reCAPTCHA) to use a different internal code path
+    // that fails for real phone numbers.
+    await auth().signOut();
+    clear();
   }
 
   return (

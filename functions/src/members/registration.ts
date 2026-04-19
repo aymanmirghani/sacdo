@@ -22,7 +22,7 @@ export const onNewRegistrationRequest = onDocumentCreated(
 
     const adminsSnap = await db
       .collection('users')
-      .where('role', '==', 'Administrator')
+      .where('IsAdmin', '==', true)
       .where('status', '==', 'active')
       .get();
 

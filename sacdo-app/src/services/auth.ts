@@ -56,6 +56,7 @@ export async function loadCurrentUser(): Promise<User | null> {
     phone: data.phone,
     email: data.email,
     role: data.role,
+    isAdmin: data.IsAdmin ?? false,
     status: data.status,
     createdAt: data.createdAt?.toDate(),
     stripeCustomerId: data.stripeCustomerId,
