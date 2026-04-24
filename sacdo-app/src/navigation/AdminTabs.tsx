@@ -82,7 +82,7 @@ export default function AdminTabs() {
         component={AdminDashboardScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="view-dashboard" color={color} size={size} />
+            <MaterialCommunityIcons name="view-dashboard-outline" color={color} size={size} />
           ),
         }}
       />
@@ -93,7 +93,7 @@ export default function AdminTabs() {
           title: 'Requests',
           tabBarBadge: badge,
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="account-clock" color={color} size={size} />
+            <MaterialCommunityIcons name="account-plus-outline" color={color} size={size} />
           ),
         }}
       />
@@ -102,7 +102,7 @@ export default function AdminTabs() {
         component={MembersListScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="account-group" color={color} size={size} />
+            <MaterialCommunityIcons name="account-group-outline" color={color} size={size} />
           ),
         }}
       />
@@ -111,7 +111,7 @@ export default function AdminTabs() {
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="cog" color={color} size={size} />
+            <MaterialCommunityIcons name="cog-outline" color={color} size={size} />
           ),
         }}
       />
@@ -120,7 +120,7 @@ export default function AdminTabs() {
         component={AdminEventsScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="calendar-edit" color={color} size={size} />
+            <MaterialCommunityIcons name="calendar-plus" color={color} size={size} />
           ),
         }}
       />

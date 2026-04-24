@@ -2,7 +2,7 @@ SACDO APP - DEPLOYMENT INSTRUCTIONS
 =====================================
 
 local build: cd sacdo-app. npx expo run:android --device
-force clean build: npx expo prebuild --clean
+force clean build: npx expo prebuild --platform android --clean
 
 
 PREREQUISITES

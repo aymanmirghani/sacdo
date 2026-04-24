@@ -21,6 +21,7 @@
     "@react-navigation/native-stack": "^7.14.10",
     "@stripe/stripe-react-native": "^0.63.0",
     "expo": "~54.0.33",
+    "expo-build-properties": "~1.0.10",
     "expo-local-authentication": "^55.0.13",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",

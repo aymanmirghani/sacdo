@@ -6,20 +6,17 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { Collections } from './firebase';
 import { User } from '../types';
 
-// Phone OTP — uses Firebase Auth built-in
-let _phoneConfirmation: any = null;
-
+// Phone OTP — uses Cloud Function + Twilio, same pattern as email OTP
 export async function sendPhoneOTP(phoneNumber: string) {
-  _phoneConfirmation = await auth().signInWithPhoneNumber(phoneNumber);
-  return _phoneConfirmation;
+  const fn = functions().httpsCallable('sendPhoneOTP');
+  await fn({ phone: phoneNumber });
 }
 
-export function getPhoneConfirmation() {
-  return _phoneConfirmation;
-}
-
-export async function verifyPhoneOTP(confirmation: any, code: string) {
-  await confirmation.confirm(code);
+export async function verifyPhoneOTP(phone: string, code: string): Promise<User | null> {
+  const fn = functions().httpsCallable('verifyPhoneOTP');
+  const result = await fn({ phone, code });
+  const { customToken } = result.data as { customToken: string };
+  await auth().signInWithCustomToken(customToken);
   return loadCurrentUser();
 }
 

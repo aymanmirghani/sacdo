@@ -13,6 +13,14 @@ type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 };
 
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 10);
+  if (digits.length === 0) return '';
+  if (digits.length <= 3) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)})${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)})${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export default function LoginScreen({ navigation }: Props) {
   const [method, setMethod] = useState<'phone' | 'email'>('phone');
   const [contact, setContact] = useState('');
@@ -76,14 +84,25 @@ export default function LoginScreen({ navigation }: Props) {
       Alert.alert('Error', `Please enter your ${method === 'phone' ? 'phone number' : 'email address'}.`);
       return;
     }
+
+    let normalizedContact = contact.trim();
+    if (method === 'phone') {
+      const digits = contact.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        Alert.alert('Error', 'Please enter a complete 10-digit US phone number.');
+        return;
+      }
+      normalizedContact = `+1${digits}`;
+    }
+
     setLoading(true);
     try {
       if (method === 'phone') {
-        await sendPhoneOTP(contact.trim());
+        await sendPhoneOTP(normalizedContact);
       } else {
-        await sendEmailOTP(contact.trim());
+        await sendEmailOTP(normalizedContact);
       }
-      navigation.navigate('OTP', { method, contact: contact.trim() });
+      navigation.navigate('OTP', { method, contact: normalizedContact });
     } catch (e: any) {
       Alert.alert('Error', `[${e.code ?? 'unknown'}] ${e.message ?? 'Not able to validate your information.'}`);
     } finally {
@@ -127,10 +146,11 @@ export default function LoginScreen({ navigation }: Props) {
       <TextInput
         label={method === 'phone' ? 'US Phone Number' : 'Email Address'}
         value={contact}
-        onChangeText={setContact}
+        onChangeText={(v) => setContact(method === 'phone' ? formatPhone(v) : v)}
         keyboardType={method === 'phone' ? 'phone-pad' : 'email-address'}
         autoCapitalize="none"
-        placeholder={method === 'phone' ? '+1 555 000 0000' : 'you@example.com'}
+        placeholder={method === 'phone' ? '(555)555-5555' : 'you@example.com'}
+        maxLength={method === 'phone' ? 13 : undefined}
         style={styles.input}
       />
       <Button

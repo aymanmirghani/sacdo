@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -6,7 +6,7 @@ import { RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { AuthStackParamList } from '../../types';
-import { verifyPhoneOTP, verifyEmailOTP, sendPhoneOTP, sendEmailOTP, getPhoneConfirmation } from '../../services/auth';
+import { verifyPhoneOTP, verifyEmailOTP, sendPhoneOTP, sendEmailOTP } from '../../services/auth';
 import { useAuthStore } from '../../store/useAuthStore';
 
 type Props = {
@@ -21,14 +21,7 @@ export default function OTPScreen({ navigation, route }: Props) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(OTP_EXPIRY_SECONDS);
-  const confirmationRef = useRef<any>(null);
   const { setUser } = useAuthStore();
-
-  useEffect(() => {
-    if (method === 'phone') {
-      confirmationRef.current = getPhoneConfirmation();
-    }
-  }, []);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -53,7 +46,7 @@ export default function OTPScreen({ navigation, route }: Props) {
     try {
       let user;
       if (method === 'phone') {
-        user = await verifyPhoneOTP(confirmationRef.current, code.trim());
+        user = await verifyPhoneOTP(contact, code.trim());
       } else {
         user = await verifyEmailOTP(contact, code.trim());
       }
@@ -88,8 +81,7 @@ export default function OTPScreen({ navigation, route }: Props) {
   async function handleResend() {
     try {
       if (method === 'phone') {
-        const confirmation = await sendPhoneOTP(contact);
-        confirmationRef.current = confirmation;
+        await sendPhoneOTP(contact);
       } else {
         await sendEmailOTP(contact);
       }

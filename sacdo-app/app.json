@@ -18,15 +18,29 @@
       "bundleIdentifier": "com.sacdo.app",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Use Face ID to sign in quickly and securely."
+        "NSFaceIDUsageDescription": "Use Face ID to sign in quickly and securely.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Camera access is required for scanning payment card details."
       }
     },
     "plugins": [
       "@react-native-firebase/app",
-      ["@stripe/stripe-react-native", {
-        "merchantIdentifier": "merchant.com.sacdo.app",
-        "publishableKey": "pk_live_51TK8Jo01tmZbQrzJLrrrGtFnxC51or7dWGTVRbW7m5pvpwUidIPk2UjboavxP5wcg3F0CI2STZadsUfLF1RU6DTd00NzaszOFs"
-      }]
+      "@react-native-firebase/messaging",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.sacdo.app",
+          "publishableKey": "pk_live_51TK8Jo01tmZbQrzJLrrrGtFnxC51or7dWGTVRbW7m5pvpwUidIPk2UjboavxP5wcg3F0CI2STZadsUfLF1RU6DTd00NzaszOFs"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "android": {
       "package": "com.sacdo.app",

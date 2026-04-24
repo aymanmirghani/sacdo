@@ -41,7 +41,7 @@ export default function MemberTabs() {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="home" color={color} size={size} />
+            <MaterialCommunityIcons name="home-outline" color={color} size={size} />
           ),
         }}
       />
@@ -50,7 +50,7 @@ export default function MemberTabs() {
         component={EventsScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="calendar-month" color={color} size={size} />
+            <MaterialCommunityIcons name="calendar-star" color={color} size={size} />
           ),
         }}
       />
@@ -60,7 +60,7 @@ export default function MemberTabs() {
         options={{
           title: 'Fees',
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="receipt" color={color} size={size} />
+            <MaterialCommunityIcons name="cash-multiple" color={color} size={size} />
           ),
         }}
       />
@@ -70,7 +70,7 @@ export default function MemberTabs() {
         options={{
           tabBarBadge: badge,
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="file-document-outline" color={color} size={size} />
+            <MaterialCommunityIcons name="clipboard-text-outline" color={color} size={size} />
           ),
         }}
       />
@@ -79,7 +79,7 @@ export default function MemberTabs() {
         component={ProfileScreen}
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
-            <MaterialCommunityIcons name="account-circle" color={color} size={size} />
+            <MaterialCommunityIcons name="account-circle-outline" color={color} size={size} />
           ),
         }}
       />
