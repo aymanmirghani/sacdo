@@ -1,13 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, UserCheck, Users, Calendar, Settings } from 'lucide-react';
+import { LayoutDashboard, UserCheck, Users, Calendar, Settings, Receipt } from 'lucide-react';
 import clsx from 'clsx';
 
 const tabs = [
-  { to: '/admin/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/requests',   icon: UserCheck,       label: 'Requests' },
-  { to: '/admin/members',    icon: Users,           label: 'Members' },
-  { to: '/admin/events',     icon: Calendar,        label: 'Events' },
-  { to: '/admin/settings',   icon: Settings,        label: 'Settings' },
+  { to: '/admin/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/requests',     icon: UserCheck,       label: 'Requests' },
+  { to: '/admin/members',      icon: Users,           label: 'Members' },
+  { to: '/admin/events',       icon: Calendar,        label: 'Events' },
+  { to: '/admin/my-invoices',  icon: Receipt,         label: 'My Invoices' },
+  { to: '/admin/settings',     icon: Settings,        label: 'Settings' },
 ];
 
 export default function AdminLayout() {

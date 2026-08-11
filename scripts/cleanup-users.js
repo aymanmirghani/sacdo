@@ -78,16 +78,25 @@ async function main() {
     console.log(`  payments:   ${payments} deleted`);
   }
 
-  // 4. Delete all registration requests
+  // 4. Delete all invoices
+  const invoiceSnap = await db.collection('invoices').get();
+  if (!DRY_RUN && !invoiceSnap.empty) {
+    const batch = db.batch();
+    invoiceSnap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
+  console.log(`\ninvoices (all): ${invoiceSnap.size} deleted`);
+
+  // 5. Delete all registration requests
   const reqSnap = await db.collection('registrationRequests').get();
   if (!DRY_RUN && !reqSnap.empty) {
     const batch = db.batch();
     reqSnap.docs.forEach((doc) => batch.delete(doc.ref));
     await batch.commit();
   }
-  console.log(`\nregistrationRequests: ${reqSnap.size} deleted`);
+  console.log(`registrationRequests: ${reqSnap.size} deleted`);
 
-  // 5. Delete Firebase Auth accounts
+  // 6. Delete Firebase Auth accounts
   if (usersToDelete.length > 0) {
     const uids = usersToDelete.map((u) => u.uid);
     if (!DRY_RUN) {

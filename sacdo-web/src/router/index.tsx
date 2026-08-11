@@ -61,6 +61,7 @@ export const router = createBrowserRouter([
       { path: 'events',                      element: <AdminEventsPage /> },
       { path: 'settings',                    element: <AdminSettingsPage /> },
       { path: 'invoices/:filter',            element: <InvoiceListPage /> },
+      { path: 'my-invoices',                  element: <MemberInvoicesPage /> },
       { path: 'settings/fees',               element: <FeeConfigPage /> },
       { path: 'settings/payment-types',      element: <PaymentTypesPage /> },
       { path: 'settings/invoice-config',     element: <InvoiceConfigPage /> },

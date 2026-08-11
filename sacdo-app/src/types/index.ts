@@ -128,6 +128,7 @@ export type AdminTabParamList = {
   Members: undefined;
   Settings: undefined;
   Events: undefined;
+  MyInvoices: undefined;
 };
 
 export type InvoiceFilter =

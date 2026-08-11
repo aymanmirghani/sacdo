@@ -13,6 +13,7 @@ import RegistrationRequestsScreen from '../screens/admin/RegistrationRequestsScr
 import MembersListScreen from '../screens/admin/MembersListScreen';
 import SettingsScreen from '../screens/admin/SettingsScreen';
 import AdminEventsScreen from '../screens/admin/EventsScreen';
+import InvoicesScreen from '../screens/member/InvoicesScreen';
 
 const Tab = createBottomTabNavigator<AdminTabParamList>();
 
@@ -121,6 +122,16 @@ export default function AdminTabs() {
         options={{
           tabBarIcon: ({ color, size }: IconProps) => (
             <MaterialCommunityIcons name="calendar-plus" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MyInvoices"
+        component={InvoicesScreen}
+        options={{
+          title: 'My Invoices',
+          tabBarIcon: ({ color, size }: IconProps) => (
+            <MaterialCommunityIcons name="file-document-outline" color={color} size={size} />
           ),
         }}
       />
