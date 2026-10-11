@@ -98,9 +98,9 @@ export default function AdminEventsPage() {
 
       {/* Add/Edit dialog */}
       {showDialog && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+        <div className="fixed inset-0 bg-black/50 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowDialog(false); }}>
-          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 max-h-[90svh] overflow-y-auto">
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] max-h-[90svh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">{editingEvent ? 'Edit Event' : 'New Event'}</h2>
             {[
               { label: 'Title *', key: 'title' as const, type: 'text', placeholder: '' },
