@@ -3,7 +3,7 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import { sendEmail } from '../notifications/email';
-import { sendSMS } from '../notifications/sms';
+import { sendSMS, isTestPhoneNumber } from '../notifications/sms';
 
 const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 const fromEmail = defineSecret('FROM_EMAIL');
@@ -27,21 +27,45 @@ export const onNewRegistrationRequest = onDocumentCreated(
       .get();
 
     const tokens: string[] = [];
+    const phones: string[] = [];
     adminsSnap.docs.forEach((doc) => {
-      const fcmToken = doc.data().fcmToken;
-      if (fcmToken) tokens.push(fcmToken);
+      const adminUser = doc.data();
+      if (adminUser.fcmToken) tokens.push(adminUser.fcmToken);
+      if (adminUser.phone && !isTestPhoneNumber(adminUser.phone)) phones.push(adminUser.phone);
     });
 
-    if (tokens.length > 0) {
-      await admin.messaging().sendMulticast({
-        tokens,
-        notification: {
-          title: 'New Membership Request',
-          body: `${data.firstName} ${data.lastName} has requested to join.`,
-        },
-        data: { requestId: event.params.requestId },
-      });
+    const applicant = `${data.firstName} ${data.lastName}`.trim();
+
+    // Push only reaches admins running the native app — the PWA never registers
+    // an FCM token — so the SMS below is what admins actually receive.
+    // Sent one token at a time: sendMulticast() posts to the FCM /batch endpoint,
+    // which Google has retired, so it now fails with a 404 and aborts the handler.
+    for (const token of tokens) {
+      try {
+        await admin.messaging().send({
+          token,
+          notification: {
+            title: 'New Membership Request',
+            body: `${applicant} has requested to join.`,
+          },
+          data: { requestId: event.params.requestId },
+        });
+      } catch (err: any) {
+        console.error('Failed to send admin push notification:', err.message);
+      }
     }
+
+    // Text every active admin. One bad number must not stop the others.
+    const smsBody = `SACDO: New membership request from ${applicant}. Open the SACDO app to review it.`;
+    const results = await Promise.allSettled(phones.map((phone) => sendSMS(phone, smsBody)));
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        console.error(`Failed to SMS admin ${phones[i]}:`, result.reason?.message ?? result.reason);
+      }
+    });
+
+    const delivered = results.filter((r) => r.status === 'fulfilled').length;
+    console.log(`New registration request from ${applicant}: notified ${delivered}/${phones.length} admin(s) by SMS.`);
   }
 );
 

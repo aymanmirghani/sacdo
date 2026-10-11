@@ -2,7 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
-import { sendSMS } from '../notifications/sms';
+import { sendSMS, TEST_PHONE_NUMBERS } from '../notifications/sms';
 
 const twilioAccountSid = defineSecret('TWILIO_ACCOUNT_SID');
 const twilioAuthToken = defineSecret('TWILIO_AUTH_TOKEN');
@@ -10,11 +10,6 @@ const twilioPhoneNumber = defineSecret('TWILIO_PHONE_NUMBER');
 
 const db = admin.firestore();
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
-
-// Test phone numbers with predefined codes (mirrors Firebase test phone number feature)
-const TEST_PHONE_NUMBERS: Record<string, string> = {
-  '+16505551234': '123456',
-};
 
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();

@@ -90,9 +90,9 @@ export default function AdminRequestsPage() {
 
       {/* Reject modal */}
       {rejectTarget && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+        <div className="fixed inset-0 bg-black/50 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setRejectTarget(null); }}>
-          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6">
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] max-h-[90dvh] overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">Reject Request</h2>
             <label className="block text-sm text-gray-600 mb-1">Reason for rejection</label>
             <textarea
