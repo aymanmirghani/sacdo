@@ -5,6 +5,11 @@ import { processAutoPayInvoices } from '../payments/stripe';
 
 const db = admin.firestore();
 
+// Admins may generate invoices for the current month, the 6 months before it,
+// and the 6 months after it.
+const PERIOD_MONTHS_BACK = 6;
+const PERIOD_MONTHS_FORWARD = 6;
+
 interface InvoiceConfig {
   generationDay: number;
   dueDay: number;
@@ -54,27 +59,15 @@ async function buildAndCreateInvoices(
       continue;
     }
 
-    // Calculate past due: sum of all unpaid prior invoices
-    const unpaidSnap = await db
-      .collection('invoices')
-      .where('memberId', '==', memberId)
-      .where('status', 'in', ['pending', 'overdue'])
-      .get();
-
-    const pastDueAmount = unpaidSnap.docs.reduce(
-      (sum, doc) => sum + (doc.data().amount ?? 0),
-      0
-    );
-
-    const amount = baseAmount + pastDueAmount;
-
+    // Each invoice bills its own period only — unpaid prior invoices are never
+    // rolled forward, they simply stay outstanding on their own.
     const invoiceRef = db.collection('invoices').doc();
     batch.set(invoiceRef, {
       memberId,
       memberName,
       baseAmount,
-      pastDueAmount,
-      amount,
+      pastDueAmount: 0,
+      amount: baseAmount,
       period,
       invoiceDate: admin.firestore.Timestamp.fromDate(now),
       dueDate: admin.firestore.Timestamp.fromDate(dueDate),
@@ -165,6 +158,17 @@ export const generateInvoicesOnDemand = onCall({ secrets: ['STRIPE_SECRET_KEY'] 
     const year = parseInt(match[1], 10);
     const month = parseInt(match[2], 10);
     if (month < 1 || month > 12) throw new HttpsError('invalid-argument', 'Invalid month in period.');
+
+    const now = new Date();
+    const monthsFromNow =
+      (year * 12 + (month - 1)) - (now.getFullYear() * 12 + now.getMonth());
+    if (monthsFromNow < -PERIOD_MONTHS_BACK || monthsFromNow > PERIOD_MONTHS_FORWARD) {
+      throw new HttpsError(
+        'invalid-argument',
+        `period must be within the last ${PERIOD_MONTHS_BACK} or next ${PERIOD_MONTHS_FORWARD} months.`
+      );
+    }
+
     invoiceDate = new Date(year, month - 1, 1);
   } else {
     invoiceDate = new Date();

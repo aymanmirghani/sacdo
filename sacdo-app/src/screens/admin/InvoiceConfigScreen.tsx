@@ -2,20 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Text, TextInput, Button, ActivityIndicator, Menu, Divider } from 'react-native-paper';
 import { getMembershipFees } from '../../services/members';
-import { getInvoiceConfig, saveInvoiceConfig, generateInvoicesOnDemand } from '../../services/invoices';
+import {
+  getInvoiceConfig,
+  saveInvoiceConfig,
+  generateInvoicesOnDemand,
+  getPeriodOptions,
+  getCurrentPeriod,
+  getPeriodLabel,
+} from '../../services/invoices';
 import { useAuthStore } from '../../store/useAuthStore';
-
-function getPeriodOptions(): string[] {
-  const options: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    options.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return options;
-}
-
-const PERIOD_OPTIONS = getPeriodOptions();
 
 export default function InvoiceConfigScreen() {
   const { user } = useAuthStore();
@@ -25,7 +20,8 @@ export default function InvoiceConfigScreen() {
   const [feeTypes, setFeeTypes] = useState<string[]>([]);
   const [feeTypeMenuVisible, setFeeTypeMenuVisible] = useState(false);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPTIONS[0]);
+  const [selectedPeriod, setSelectedPeriod] = useState(getCurrentPeriod);
+  const periodOptions = getPeriodOptions();
   const [form, setForm] = useState({
     generationDay: '1',
     dueDay: '15',
@@ -197,15 +193,15 @@ export default function InvoiceConfigScreen() {
             style={styles.menuBtn}
             contentStyle={styles.menuBtnContent}
           >
-            {selectedPeriod}
+            {getPeriodLabel(selectedPeriod)}
           </Button>
         }
       >
-        {PERIOD_OPTIONS.map((p) => (
+        {periodOptions.map((p) => (
           <Menu.Item
-            key={p}
-            title={p}
-            onPress={() => { setPeriodMenuVisible(false); setSelectedPeriod(p); }}
+            key={p.value}
+            title={p.label}
+            onPress={() => { setPeriodMenuVisible(false); setSelectedPeriod(p.value); }}
           />
         ))}
       </Menu>

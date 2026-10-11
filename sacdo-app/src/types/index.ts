@@ -70,8 +70,8 @@ export interface Invoice {
   memberId: string;
   memberName: string;
   baseAmount: number;
-  pastDueAmount: number;
-  amount: number;            // baseAmount + pastDueAmount
+  pastDueAmount: number;     // always 0 on invoices generated after Oct 2026
+  amount: number;            // the period's fee only — prior balances are not rolled in
   period: string;            // 'YYYY-MM'
   invoiceDate: Date;
   dueDate: Date;

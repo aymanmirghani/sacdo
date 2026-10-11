@@ -27,6 +27,53 @@ function toInvoice(doc: any): Invoice {
   };
 }
 
+// ─── Generation periods ───────────────────────────────────────────────────────
+// Admins may generate invoices for the current month, the 6 months before it,
+// and the 6 months after it. The same range is enforced in the callable.
+export const PERIOD_MONTHS_BACK = 6;
+export const PERIOD_MONTHS_FORWARD = 6;
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+export interface PeriodOption {
+  value: string; // 'YYYY-MM'
+  label: string; // e.g. 'October 2026 (current)'
+}
+
+function toPeriod(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+export function getCurrentPeriod(): string {
+  return toPeriod(new Date());
+}
+
+/** Current month first, then the recent past, then upcoming months. */
+export function getPeriodOptions(): PeriodOption[] {
+  const now = new Date();
+  const offsets = [
+    0,
+    ...Array.from({ length: PERIOD_MONTHS_BACK }, (_, i) => -(i + 1)),
+    ...Array.from({ length: PERIOD_MONTHS_FORWARD }, (_, i) => i + 1),
+  ];
+
+  return offsets.map((offset) => {
+    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const suffix = offset === 0 ? ' (current)' : offset > 0 ? ' (upcoming)' : '';
+    return {
+      value: toPeriod(d),
+      label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}${suffix}`,
+    };
+  });
+}
+
+export function getPeriodLabel(period: string): string {
+  return getPeriodOptions().find((o) => o.value === period)?.label ?? period;
+}
+
 export async function getInvoiceConfig(): Promise<InvoiceConfig | null> {
   const doc = await firestore().collection(Collections.INVOICE_CONFIG).doc('default').get();
   const d = doc.data();

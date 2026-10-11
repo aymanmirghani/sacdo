@@ -14,7 +14,14 @@ import {
 } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AdminStackParamList, Invoice } from '../../types';
-import { getAllInvoicesForMember, markInvoicePaid, generateInvoicesOnDemand } from '../../services/invoices';
+import {
+  getAllInvoicesForMember,
+  markInvoicePaid,
+  generateInvoicesOnDemand,
+  getPeriodOptions,
+  getCurrentPeriod,
+  getPeriodLabel,
+} from '../../services/invoices';
 import { getPaymentTypes } from '../../services/members';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -25,18 +32,6 @@ const STATUS_COLORS: Record<string, string> = {
   paid: '#C8E6C9',
   overdue: '#FFCDD2',
 };
-
-function getPeriodOptions(): string[] {
-  const options: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    options.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return options;
-}
-
-const PERIOD_OPTIONS = getPeriodOptions();
 
 export default function MemberInvoicesScreen({ route }: Props) {
   const { memberId, memberName } = route.params;
@@ -56,8 +51,9 @@ export default function MemberInvoicesScreen({ route }: Props) {
 
   // Generate invoice dialog
   const [generateDialogVisible, setGenerateDialogVisible] = useState(false);
-  const [generatePeriod, setGeneratePeriod] = useState(PERIOD_OPTIONS[0]);
+  const [generatePeriod, setGeneratePeriod] = useState(getCurrentPeriod);
   const [generatePeriodMenuVisible, setGeneratePeriodMenuVisible] = useState(false);
+  const periodOptions = getPeriodOptions();
   const [generating, setGenerating] = useState(false);
 
   const load = useCallback(async () => {
@@ -233,15 +229,15 @@ export default function MemberInvoicesScreen({ route }: Props) {
                   style={styles.menuBtn}
                   contentStyle={styles.menuBtnContent}
                 >
-                  {generatePeriod}
+                  {getPeriodLabel(generatePeriod)}
                 </Button>
               }
             >
-              {PERIOD_OPTIONS.map((p) => (
+              {periodOptions.map((p) => (
                 <Menu.Item
-                  key={p}
-                  title={p}
-                  onPress={() => { setGeneratePeriodMenuVisible(false); setGeneratePeriod(p); }}
+                  key={p.value}
+                  title={p.label}
+                  onPress={() => { setGeneratePeriodMenuVisible(false); setGeneratePeriod(p.value); }}
                 />
               ))}
             </Menu>

@@ -2,20 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getMembershipFees } from '../../../services/members';
-import { getInvoiceConfig, saveInvoiceConfig, generateInvoicesOnDemand } from '../../../services/invoices';
+import { getInvoiceConfig, saveInvoiceConfig, generateInvoicesOnDemand, getCurrentPeriod } from '../../../services/invoices';
 import { useAuthStore } from '../../../store/useAuthStore';
-
-function getPeriodOptions(): string[] {
-  const options: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    options.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return options;
-}
-
-const PERIOD_OPTIONS = getPeriodOptions();
+import PeriodSelect from '../../../components/PeriodSelect';
 
 export default function InvoiceConfigPage() {
   const navigate = useNavigate();
@@ -24,7 +13,7 @@ export default function InvoiceConfigPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [feeTypes, setFeeTypes] = useState<string[]>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPTIONS[0]);
+  const [selectedPeriod, setSelectedPeriod] = useState(getCurrentPeriod);
   const [form, setForm] = useState({ generationDay: '1', dueDay: '15', membershipType: '' });
   const [saveMsg, setSaveMsg] = useState('');
   const [saveError, setSaveError] = useState('');
@@ -122,10 +111,8 @@ export default function InvoiceConfigPage() {
           <p className="text-xs text-gray-400 mb-4">Members who already have an invoice for the selected period will be skipped.</p>
           <div className="mb-4">
             <label className="block text-sm text-gray-600 mb-1">Period</label>
-            <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c] bg-white">
-              {PERIOD_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
+            <PeriodSelect value={selectedPeriod} onChange={setSelectedPeriod}
+              className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c] bg-white" />
           </div>
           {genError && <p className="text-red-600 text-sm mb-2">{genError}</p>}
           {genMsg && <p className="text-green-600 text-sm mb-2">{genMsg}</p>}

@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FilePlus } from 'lucide-react';
-import { getAllInvoicesForMember, markInvoicePaid, generateInvoicesOnDemand } from '../../services/invoices';
+import { getAllInvoicesForMember, markInvoicePaid, generateInvoicesOnDemand, getCurrentPeriod } from '../../services/invoices';
 import { getPaymentTypes } from '../../services/members';
 import { useAuthStore } from '../../store/useAuthStore';
+import PeriodSelect from '../../components/PeriodSelect';
 import type { Invoice } from '../../types';
 import clsx from 'clsx';
 
@@ -14,18 +15,6 @@ const STATUS_STYLES: Record<string, string> = {
   paid:    'bg-green-100 text-green-800',
   overdue: 'bg-red-100 text-red-800',
 };
-
-function getPeriodOptions(): string[] {
-  const options: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    options.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return options;
-}
-
-const PERIOD_OPTIONS = getPeriodOptions();
 
 export default function AdminMemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -46,7 +35,7 @@ export default function AdminMemberDetailPage() {
 
   // Generate invoice dialog
   const [showGenerate, setShowGenerate] = useState(false);
-  const [generatePeriod, setGeneratePeriod] = useState(PERIOD_OPTIONS[0]);
+  const [generatePeriod, setGeneratePeriod] = useState(getCurrentPeriod);
   const [generating, setGenerating] = useState(false);
   const [genMsg, setGenMsg] = useState('');
 
@@ -121,7 +110,7 @@ export default function AdminMemberDetailPage() {
           </div>
         </div>
         <button
-          onClick={() => { setGenMsg(''); setGeneratePeriod(PERIOD_OPTIONS[0]); setShowGenerate(true); }}
+          onClick={() => { setGenMsg(''); setGeneratePeriod(getCurrentPeriod()); setShowGenerate(true); }}
           className="flex items-center gap-1 bg-[#c8a951] text-[#1a3a5c] text-sm font-semibold px-3 py-1.5 rounded-xl"
         >
           <FilePlus size={15} /> Generate
@@ -257,13 +246,11 @@ export default function AdminMemberDetailPage() {
           <div className="flex-1 overflow-y-auto px-6 py-6">
             <div className="mb-4">
               <label className="block text-sm text-gray-600 mb-1">Period</label>
-              <select
+              <PeriodSelect
                 value={generatePeriod}
-                onChange={(e) => setGeneratePeriod(e.target.value)}
+                onChange={setGeneratePeriod}
                 className="w-full border border-gray-300 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a5c] bg-white"
-              >
-                {PERIOD_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
+              />
             </div>
 
             {genMsg && <p className="text-sm text-amber-600">{genMsg}</p>}

@@ -41,12 +41,52 @@ function toInvoice(snap: any): Invoice {
   };
 }
 
+function toPeriod(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function currentAndLastPeriod() {
   const now = new Date();
-  const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastP = `${last.getFullYear()}-${String(last.getMonth() + 1).padStart(2, '0')}`;
-  return { current, last: lastP };
+  return { current: toPeriod(now), last: toPeriod(last) };
+}
+
+// ─── Generation periods ───────────────────────────────────────────────────────
+// Admins may generate invoices for the current month, the 6 months before it,
+// and the 6 months after it.
+export const PERIOD_MONTHS_BACK = 6;
+export const PERIOD_MONTHS_FORWARD = 6;
+
+export type PeriodGroup = 'Current month' | 'Past 6 months' | 'Next 6 months';
+
+export interface PeriodOption {
+  value: string; // YYYY-MM
+  label: string; // e.g. "October 2026"
+  group: PeriodGroup;
+}
+
+export function getCurrentPeriod(): string {
+  return toPeriod(new Date());
+}
+
+/** Current month first, then the recent past, then upcoming months. */
+export function getPeriodOptions(): PeriodOption[] {
+  const now = new Date();
+  const offsets = [
+    0,
+    ...Array.from({ length: PERIOD_MONTHS_BACK }, (_, i) => -(i + 1)),
+    ...Array.from({ length: PERIOD_MONTHS_FORWARD }, (_, i) => i + 1),
+  ];
+
+  return offsets.map((offset) => {
+    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    return {
+      value: toPeriod(d),
+      label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      group:
+        offset === 0 ? 'Current month' : offset < 0 ? 'Past 6 months' : 'Next 6 months',
+    } as PeriodOption;
+  });
 }
 
 // ─── Member ───────────────────────────────────────────────────────────────────
